@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tubesmob/auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +19,11 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _showPassword = false;
   bool _loading = false;
   String? _error;
+
+  Future<void> _loginWithFingerprint() async {
+    final authService = AuthService();
+    await authService.authenticateWithFingerprint(context);
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -44,6 +51,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final status = userData['status'];
 
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString('email', emailController.text.trim());
+      prefs.setString('password', passwordController.text.trim());
+      prefs.setString('role', status); // dari hasil query users
+
       if (status == 'student') {
         context.go('/dashboard-student');
       } else {
@@ -65,6 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      // backgroundColor: Colors.grey,
       backgroundColor: Colors.transparent,
       body: Container(
         decoration: const BoxDecoration(
@@ -84,6 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 360,
                   padding: const EdgeInsets.all(30),
                   decoration: BoxDecoration(
+                    // color: Colors.grey,
                     color: Colors.white.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white.withOpacity(0.2)),
@@ -161,6 +175,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                     : const Text('Masuk'),
                           ),
                         ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _loading ? null : _loginWithFingerprint,
+                            icon: const Icon(
+                              Icons.fingerprint,
+                              color: Colors.white,
+                            ),
+                            label: const Text(
+                              'Masuk dengan Sidik Jari',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.white54),
+                            ),
+                          ),
+                        ),
+
                         const SizedBox(height: 15),
                         TextButton(
                           onPressed: () {
