@@ -3,8 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tubesmob/dashboard_student.dart';
 import 'package:tubesmob/dashboard_teachers.dart';
+import 'package:tubesmob/input_kuis_page.dart';
+import 'package:tubesmob/input_soal.dart';
+import 'package:tubesmob/lihat_nilai.dart';
 import 'package:tubesmob/login_page.dart';
 import 'package:tubesmob/registerpage.dart';
+import 'package:tubesmob/scan_kuis.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,5 +54,26 @@ final _router = GoRouter(
       path: '/dashboard-teacher',
       builder: (context, state) => const TeacherDashboard(),
     ),
+    GoRoute(
+      path: '/scan-kuis',
+      builder:
+          (context, state) => const ScanKuisPage(), // nanti kamu buat file ini
+    ),
+    GoRoute(
+      path: '/lihat-nilai',
+      builder: (context, state) => const LihatNilaiPage(), // dan file ini juga
+    ),
+    GoRoute(
+      path: '/buat-soal',
+      builder: (context, state) {
+        final kodeKuis = (state.extra as Map)['kodeKuis'];
+        return InputSoalPage(kodeKuis: kodeKuis);
+      },
+    ),
+    // GoRoute(
+    //   path: '/input-kuis',
+    //   builder: (context, state) => const InputKuisPage(),
+    // ),
+    GoRoute(path: '/kelas', builder: (context, state) => const InputKuisPage()),
   ],
 );
