@@ -1,5 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -11,129 +13,253 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _namaController = TextEditingController();
-  final _nimController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
-  String _status = 'student';
 
-  bool _loading = false;
+  final nameController = TextEditingController();
+  final nimController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
+  String selectedStatus = 'student';
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
-
     try {
-      final email = _emailController.text.trim();
-      final password = _passwordController.text.trim();
-      final nama = _namaController.text.trim().toUpperCase();
-      final nim = _nimController.text.trim();
-
-      final response = await Supabase.instance.client.auth.signUp(
-        email: email,
-        password: password,
+      final authResponse = await Supabase.instance.client.auth.signUp(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
 
-      final user = response.user;
-      if (user == null) throw 'Gagal mendaftarkan akun';
+      if (authResponse.user == null) throw 'Register gagal. Coba lagi.';
+      final uid = authResponse.user!.id;
 
       await Supabase.instance.client.from('users').insert({
-        'id': user.id,
-        'email': email,
-        'nama_lengkap': nama,
-        'nim_nip': nim,
-        'status': _status,
+        'id': uid,
+        'full_name': nameController.text.trim(),
+        'nim_nip': nimController.text.trim(),
+        'email': emailController.text.trim(),
+        'status': selectedStatus,
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrasi berhasil!')),
-      );
-
-      Navigator.pushReplacementNamed(context, '/login');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registrasi berhasil! Silakan login.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/login');
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal registrasi: $e')),
-      );
-    } finally {
-      setState(() => _loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal daftar: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              _buildInput(_namaController, 'Nama Lengkap'),
-              _buildInput(_nimController, 'NIM/NIP', inputType: TextInputType.number),
-              _buildDropdownStatus(),
-              _buildInput(_emailController, 'Email', inputType: TextInputType.emailAddress),
-              _buildInput(_passwordController, 'Password', isPassword: true),
-              _buildInput(_confirmController, 'Konfirmasi Password', isPassword: true),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _loading ? null : _register,
-                child: _loading
-                    ? const CircularProgressIndicator()
-                    : const Text('Daftar'),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1A1A1A), Color(0xFF2C2C2C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                child: Container(
+                  width: 380,
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white30),
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        Image.asset('assets/logoElkom2.png', height: 120),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Daftar Akun',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildInput(
+                          nameController,
+                          'Nama Lengkap',
+                          textCapitalization: TextCapitalization.words,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          nimController,
+                          'NIM / NIP',
+                          inputType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: selectedStatus,
+                          decoration: _dropdownDecoration(),
+                          style: const TextStyle(color: Colors.white),
+                          dropdownColor: Colors.black,
+                          iconEnabledColor: Colors.white,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'student',
+                              child: Text('Student'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'teacher',
+                              child: Text('Teacher'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => selectedStatus = value);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          emailController,
+                          'Email',
+                          inputType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          passwordController,
+                          'Password',
+                          isPassword: true,
+                          show: _showPassword,
+                          onToggle: () {
+                            setState(() => _showPassword = !_showPassword);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          confirmPasswordController,
+                          'Konfirmasi Password',
+                          isPassword: true,
+                          show: _showConfirmPassword,
+                          onToggle: () {
+                            setState(
+                              () =>
+                                  _showConfirmPassword = !_showConfirmPassword,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _register,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepPurple,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Daftar Sekarang'),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () => context.go('/login'),
+                          child: const Text(
+                            'Sudah punya akun? Masuk',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  InputDecoration _dropdownDecoration() => InputDecoration(
+    filled: true,
+    fillColor: Colors.white.withOpacity(0.05),
+    hintStyle: const TextStyle(color: Colors.white70),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.white30),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.white),
+      borderRadius: BorderRadius.circular(10),
+    ),
+  );
+
   Widget _buildInput(
     TextEditingController controller,
-    String label, {
+    String hint, {
     TextInputType inputType = TextInputType.text,
     bool isPassword = false,
+    bool show = false,
+    VoidCallback? onToggle,
+    TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        obscureText: isPassword,
-        keyboardType: inputType,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword && !show,
+      keyboardType: inputType,
+      textCapitalization: textCapitalization,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.05),
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white70),
+        suffixIcon:
+            isPassword
+                ? IconButton(
+                  icon: Icon(
+                    show ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.white70,
+                  ),
+                  onPressed: onToggle,
+                )
+                : null,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.white30),
         ),
-        validator: (value) {
-          if (value == null || value.isEmpty) return '$label wajib diisi';
-          if (label == 'NIM/NIP' && value.length < 5) {
-            return 'NIM/NIP minimal 5 digit';
-          }
-          if (label == 'Konfirmasi Password' &&
-              value != _passwordController.text) {
-            return 'Password tidak cocok';
-          }
-          return null;
-        },
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.white),
+        ),
       ),
-    );
-  }
-
-  Widget _buildDropdownStatus() {
-    return DropdownButtonFormField<String>(
-      value: _status,
-      items: const [
-        DropdownMenuItem(value: 'student', child: Text('Student')),
-        DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
-      ],
-      onChanged: (val) => setState(() => _status = val!),
-      decoration: const InputDecoration(
-        labelText: 'Status',
-        border: OutlineInputBorder(),
-      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) return '$hint wajib diisi';
+        if (hint == 'Email' && !value.contains('@')) return 'Email tidak valid';
+        if (hint == 'Password') {
+          if (value.length < 6) return 'Minimal 6 karakter';
+        }
+        if (hint == 'Konfirmasi Password' && value != passwordController.text) {
+          return 'Password tidak cocok';
+        }
+        return null;
+      },
     );
   }
 }
