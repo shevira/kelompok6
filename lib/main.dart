@@ -31,7 +31,11 @@ class MyApp extends StatelessWidget {
       title: 'Kuis Online',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.teal,
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF4F6F8),
         useMaterial3: true,
       ),
       routerConfig: _router,
@@ -49,11 +53,11 @@ final _router = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/dashboard-student',
-      builder: (context, state) => const StudentDashboard(),
+      builder: (context, state) => const StudentMainTabs(),
     ),
     GoRoute(
       path: '/dashboard-teacher',
-      builder: (context, state) => const TeacherDashboard(),
+      builder: (context, state) => const TeacherMainTabs(),
     ),
     GoRoute(
       path: '/scan-kuis',
@@ -68,7 +72,7 @@ final _router = GoRouter(
       path: '/buat-soal',
       builder: (context, state) {
         final kodeKuis = (state.extra as Map)['kodeKuis'];
-        return InputSoalPage(kodeKuis: kodeKuis);
+        return BuatSoalPage(kodeKuis: kodeKuis);
       },
     ),
     // GoRoute(
