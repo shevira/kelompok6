@@ -53,29 +53,53 @@ class _BuatSoalPageState extends State<BuatSoalPage> {
   }
 
   Future<void> _pickImage() async {
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      final file = File(picked.path);
-      final fileBytes = await file.readAsBytes();
-      final filename = 'soal_${const Uuid().v4()}.jpg';
+    try {
+      print('Memulai pemilihan gambar...');
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
 
-      final response = await supabase.storage
-          .from(widget.kodeKuis)
-          .uploadBinary(
-            filename,
-            fileBytes,
-            fileOptions: const FileOptions(upsert: true),
+      if (picked != null) {
+        final file = File(picked.path);
+        final fileBytes = await file.readAsBytes();
+        final filename = 'soal_${widget.kodeKuis}_${const Uuid().v4()}.jpg';
+        final bucketName = 'soal-kuis';
+
+        print('Mengunggah gambar ke: $filename');
+
+        final response = await supabase.storage
+            .from(bucketName)
+            .uploadBinary(
+              filename,
+              fileBytes,
+              fileOptions: const FileOptions(upsert: true),
+            );
+
+        if (response.isNotEmpty) {
+          final url = supabase.storage.from(bucketName).getPublicUrl(filename);
+          print('Upload berhasil. URL: $url');
+
+          setState(() {
+            _pickedImage = file;
+            _uploadedImageUrl = url;
+          });
+        } else {
+          print('Upload gagal: Response kosong');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gagal mengunggah gambar')),
           );
-
-      if (response.isNotEmpty) {
-        final url = supabase.storage
-            .from(widget.kodeKuis)
-            .getPublicUrl(filename);
-        setState(() {
-          _pickedImage = file;
-          _uploadedImageUrl = url;
-        });
+        }
+      } else {
+        print('Gambar tidak dipilih');
       }
+    } catch (e) {
+      print('Terjadi error saat upload gambar: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Terjadi error saat upload gambar')),
+      );
     }
   }
 
@@ -213,12 +237,16 @@ class _BuatSoalPageState extends State<BuatSoalPage> {
                     icon: const Icon(Icons.image),
                     label: const Text('Upload Gambar (opsional)'),
                   ),
-                  if (_uploadedImageUrl != null)
+                  const SizedBox(height: 8),
+                  if (_pickedImage != null)
+                    Image.file(_pickedImage!, height: 150)
+                  else if (_uploadedImageUrl != null)
                     Image.network(_uploadedImageUrl!, height: 150),
                   const SizedBox(height: 12),
                   ...['A', 'B', 'C', 'D', 'E'].map((opsi) {
                     final ctrl =
                         {'A': _a, 'B': _b, 'C': _c, 'D': _d, 'E': _e}[opsi]!;
+
                     final nilaiCtrl =
                         {
                           'A': _nilaiA,

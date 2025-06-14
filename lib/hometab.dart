@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class HomeTab extends StatelessWidget {
@@ -9,12 +8,12 @@ class HomeTab extends StatelessWidget {
     final members = [
       {
         'nama': 'Aldiotira Karisma',
-        'nim': '1203210001',
+        'nim': '1101213168',
         'foto': 'assets/aldi.jpg',
       },
       {
         'nama': 'Khaira Najla',
-        'nim': '1203210002',
+        'nim': '1101210123',
         'foto': 'assets/khaira.jpg',
       },
       {

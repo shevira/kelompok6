@@ -4,6 +4,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tubesmob/manual_token_reset.dart';
 
 class AuthService {
   final SupabaseClient supabase = Supabase.instance.client;
@@ -91,6 +92,21 @@ class AuthService {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Autentikasi gagal: ${e.toString()}")),
       );
+    }
+  }
+
+  Future<void> sendResetToken(BuildContext context, String email) async {
+    try {
+      await supabase.auth.resetPasswordForEmail(email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Token reset telah dikirim ke email")),
+      );
+      // Navigasi ke halaman input token
+      context.go('/reset-token?email=$email');
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal mengirim token: $e")));
     }
   }
 

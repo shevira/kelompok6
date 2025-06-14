@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:tubesmob/hometab.dart';
 import 'package:tubesmob/scan_kuis.dart';
-import 'package:tubesmob/lihat_nilai.dart';
 import 'package:tubesmob/settings.dart';
 
 class StudentMainTabs extends StatefulWidget {
@@ -15,14 +14,9 @@ class StudentMainTabs extends StatefulWidget {
 class _StudentMainTabsState extends State<StudentMainTabs> {
   int _currentIndex = 0;
 
-  final _pages = [
-    const HomeTab(),
-    const ScanKuisPage(),
-    const LihatNilaiPage(),
-    const SettingsTab(),
-  ];
+  final _pages = [const HomeTab(), const ScanKuisPage(), const SettingsTab()];
 
-  final _titles = ['Home', 'Scan Kuis', 'Nilai', 'Pengaturan'];
+  final _titles = ['Home', 'Scan Kuis', 'Pengaturan'];
 
   @override
   Widget build(BuildContext context) {
@@ -72,10 +66,7 @@ class _StudentMainTabsState extends State<StudentMainTabs> {
             items: const [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(icon: Icon(Icons.qr_code), label: 'Scan'),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.bar_chart),
-                label: 'Nilai',
-              ),
+
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
                 label: 'Settings',

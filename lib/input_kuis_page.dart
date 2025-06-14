@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:ui';
-import 'dart:html' as html; // Khusus Flutter Web
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
@@ -107,12 +106,12 @@ class _InputKuisPageState extends State<InputKuisPage> {
                       label: const Text("Buat / Kelola Soal"),
                     ),
                     const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      onPressed:
-                          () => _simpanQrSebagaiPng(qrKey, kelas['kode_kuis']),
-                      icon: const Icon(Icons.download),
-                      label: const Text("Simpan QR sebagai PNG"),
-                    ),
+                    // ElevatedButton.icon(
+                    //   onPressed:
+                    //       () => _simpanQrSebagaiPng(qrKey, kelas['kode_kuis']),
+                    //   icon: const Icon(Icons.download),
+                    //   label: const Text("Simpan QR sebagai PNG"),
+                    // ),
                   ],
                 ),
               ),
@@ -121,26 +120,40 @@ class _InputKuisPageState extends State<InputKuisPage> {
     );
   }
 
-  Future<void> _simpanQrSebagaiPng(GlobalKey key, String kodeKuis) async {
-    try {
-      RenderRepaintBoundary boundary =
-          key.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ImageByteFormat.png);
-      final pngBytes = byteData!.buffer.asUint8List();
+  // Future<void> _simpanQrSebagaiPng(GlobalKey key, String kodeKuis) async {
+  //   try {
+  //     // Minta izin akses penyimpanan
+  //     final status = await Permission.storage.request();
+  //     if (!status.isGranted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text("Izin penyimpanan ditolak")),
+  //       );
+  //       return;
+  //     }
 
-      // Untuk web: langsung download
-      final blob = html.Blob([pngBytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor =
-          html.AnchorElement(href: url)
-            ..setAttribute('download', 'qr_$kodeKuis.png')
-            ..click();
-      html.Url.revokeObjectUrl(url);
-    } catch (e) {
-      debugPrint('Gagal simpan QR: $e');
-    }
-  }
+  //     // Ambil render boundary dari RepaintBoundary
+  //     RenderRepaintBoundary boundary =
+  //         key.currentContext!.findRenderObject() as RenderRepaintBoundary;
+  //     final image = await boundary.toImage(pixelRatio: 3.0);
+  //     final byteData = await image.toByteData(format: ImageByteFormat.png);
+  //     final pngBytes = byteData!.buffer.asUint8List();
+
+  //     // Simpan ke galeri
+  //     final result = await ImageGallerySaver.saveImage(
+  //       pngBytes,
+  //       name: 'qr_$kodeKuis',
+  //     );
+  //     final success = result['isSuccess'];
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(success ? 'QR disimpan ke galeri' : 'Gagal simpan QR'),
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     debugPrint('Gagal simpan QR: $e');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
